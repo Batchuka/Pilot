@@ -1,0 +1,2 @@
+[console_scripts]
+pilot = pilot.cli.main:program.run

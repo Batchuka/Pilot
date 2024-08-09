@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: pilot
+Version: 1.0.0
+Summary: CLI for RPA tasks
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+
+# Pilot
+Python utility to help you to manage your project
