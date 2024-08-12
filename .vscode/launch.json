@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Tasks",
+            "name": "Pilot",
             "type": "debugpy",
             "request": "launch",
-            "program": "rpa_tasks\\rpa_tasks\\tasks.py",
+            "program": "pilot\\__main__.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

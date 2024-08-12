@@ -3,9 +3,28 @@ import subprocess
 import os
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
-class AWSManager:
+from pilot.base_manager import BaseManager
+from pilot.default.aws import AWS_DEFAULTS
+
+class AWSManager(BaseManager):
+    section_name = 'aws'
+
     def __init__(self):
+        super().__init__()
         self.aws_config = {}
+
+    def init(self, **kwargs):
+        """
+        Inicializa a sessão 'aws' no arquivo de configuração.
+        """
+        if not self.config.has_section(self.section_name):
+            self.config.add_section(self.section_name)
+
+        # Adiciona as configurações da AWS à sessão 'aws' usando os defaults
+        for key, default_value in AWS_DEFAULTS.items():
+            self.config.set(self.section_name, key, kwargs.get(key, default_value))
+
+        self.save_config()
 
     def configure_aws(self):
         """
@@ -99,30 +118,3 @@ trusted-host =
         command = f"aws codeartifact get-authorization-token --domain {aws_config['codeartifact_domain']} --domain-owner {aws_config['aws_account_id']} --query authorizationToken --output text"
         result = subprocess.run(command, capture_output=True, text=True, shell=True)
         return result.stdout.strip()
-
-@click.group()
-def cli():
-    pass
-
-@cli.command()
-@click.option('--role-arn', prompt='ARN da Role', help='ARN da role a ser assumida.')
-@click.option('--session-name', default='Session', help='Nome da sessão para a role assumida.')
-@click.pass_context
-def assume_role(ctx, role_arn, session_name):
-    aws_manager = AWSManager()
-    aws_manager.assume_role(role_arn, session_name)
-
-@cli.command()
-@click.pass_context
-def configure(ctx):
-    aws_manager = AWSManager()
-    aws_manager.configure_aws()
-
-@cli.command()
-@click.pass_context
-def authenticate(ctx):
-    aws_manager = AWSManager()
-    aws_manager.authenticate_pip_and_twine(aws_manager.aws_config)
-
-if __name__ == "__main__":
-    cli()
