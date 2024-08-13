@@ -1,26 +1,38 @@
 # pilot\cli\__main__.py
 import click
-from pilot.docs import show_markdown
+from pilot.docs import show_markdown, list_available_docs
+from pilot.src.context import Context
 from pilot.src.aws import AWSManager
 from pilot.src.docker import DockerManager
 from pilot.src.git import GitManager
+from pilot.src.deploy import DeployManager
 
 @click.group()
-def cli():
-    """CLI principal para o utilitário Pilot."""
-    pass
+@click.option('--some-option', default='default_value')
+@click.pass_context
+def cli(ctx, some_option):
+    # Obtenha a instância do contexto singleton
+    context = Context()
+    
+    # Associe o contexto do Click ao singleton
+    context.set_click_context(ctx)
+
 
 @cli.command()
-@click.argument('doc_name', default='readme')
+@click.argument('doc_name', default='help')
 def doc(doc_name):
-    """Exibe a documentação especificada (aws, docker, etc.)."""
-    show_markdown(doc_name)
+    """Exibe a documentação detalhada sobre: aws, docker, git, deploy, etc."""
+    if doc_name == 'help':
+        show_markdown('readme')
+        list_available_docs()
+    else:
+        show_markdown(doc_name)
 
 @cli.command()
 @click.argument('manager')
 @click.pass_context
 def init(ctx, manager):
-    """Inicializa o manager específico :aws, docker, git, etc."""
+    """Inicializa o manager específico: aws, docker, git, etc."""
     if manager == 'aws':
         aws_manager = AWSManager()
         aws_manager.init()
@@ -36,5 +48,12 @@ def init(ctx, manager):
     else:
         click.echo(f"Manager '{manager}' não reconhecido.")
 
+@cli.command()
+def deploy():
+    """Executa o processo de deploy configurado."""
+    manager = DeployManager()
+    manager.execute_deploy()
+
+
 if __name__ == "__main__":
-    doc()
+    deploy()

@@ -1,11 +1,17 @@
 # pilot/src/git.py
 import os
-import subprocess
 import platform
 from pathlib import Path
 from shutil import copyfile, copytree
 
-class GitManager:
+from pilot.base.manager import BaseManager
+
+class GitManager(BaseManager):
+
+    def __init__(self):
+        super().__init__()
+        self.section_name = 'git'
+        self.default_section = 'default_git'
 
     def __init__(self, repo_path):
         self.repo_path = Path(repo_path).resolve()
@@ -33,7 +39,7 @@ class GitManager:
         else:
             git_config_cmd = 'git config --global core.hooksPath ~/.githooks'
 
-        subprocess.run(git_config_cmd, shell=True)
+        self.ctx(git_config_cmd)
 
         # Copia os hooks para o diretório de hooks global
         global_hooks_path = Path.home() / ".githooks"
@@ -50,15 +56,15 @@ class GitManager:
 
     def check_modifications_and_suggest_commit(self):
         """Verifica a quantidade de modificações e sugere um commit."""
-        changed_files = subprocess.run(["git", "status", "--porcelain"], cwd=self.repo_path, capture_output=True, text=True).stdout
+        changed_files = self.ctx.run(["git", "status", "--porcelain"], cwd=self.repo_path, capture_output=True, text=True).stdout
         num_changes = len(changed_files.splitlines())
 
         if num_changes > 10:  # Um limiar para sugerir commit
-            print(f"Você tem {num_changes} arquivos modificados. Considere fazer um commit.")
+            self.lo(f"Você tem {num_changes} arquivos modificados. Considere fazer um commit.")
 
     def prompt_for_tag_after_commit(self):
         """Pergunta ao usuário se deseja adicionar uma tag após um commit."""
-        subprocess.run(["git", "commit"], cwd=self.repo_path)
+        self.ctx.run(["git", "commit"], cwd=self.repo_path)
 
         add_tag = input("Você deseja adicionar uma tag para este commit? (s/n): ")
         if add_tag.lower() == 's':
@@ -67,7 +73,7 @@ class GitManager:
 
     def create_semantic_version_tag(self, severity):
         """Cria uma tag de versão semântica com base na severidade."""
-        last_tag = subprocess.run(["git", "describe", "--tags", "--abbrev=0"], cwd=self.repo_path, capture_output=True, text=True).stdout.strip()
+        last_tag = self.ctx.run(["git", "describe", "--tags", "--abbrev=0"], cwd=self.repo_path, capture_output=True, text=True).stdout.strip()
         major, minor, patch = map(int, last_tag.lstrip('v').split('.'))
 
         if severity == 'major':
@@ -81,18 +87,11 @@ class GitManager:
             patch += 1
 
         new_tag = f"v{major}.{minor}.{patch}"
-        subprocess.run(["git", "tag", "-a", new_tag, "-m", f'Release version {new_tag}'], cwd=self.repo_path)
-        subprocess.run(["git", "push", "origin", new_tag], cwd=self.repo_path)
+        self.ctx.run(["git", "tag", "-a", new_tag, "-m", f'Release version {new_tag}'], cwd=self.repo_path)
+        self.ctx.run(["git", "push", "origin", new_tag], cwd=self.repo_path)
 
     def setup_repo(self):
         """Instala os hooks e configura o repositório."""
         self.initialize_hooks()
         self.check_modifications_and_suggest_commit()
         self.prompt_for_tag_after_commit()
-
-
-# Uso da classe
-# git_manager = GitManager('/caminho/para/seu/repo')
-# git_manager.initialize_hooks()
-# git_manager.apply_hooks_to_cloned_repo()
-# git_manager.configure_for_user()
