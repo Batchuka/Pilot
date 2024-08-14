@@ -20,13 +20,6 @@ class BaseDeployPipeline:
         if not self.default_section:
             raise AttributeError(f"{self.__class__.__name__} deve definir 'default_section'")
 
-    # def get(self, key, fallback=None):
-    #     """Obtém o valor de uma chave usando a seção e a seção padrão do Manager."""
-    #     self._check_required_attributes()
-    #     if not self.section_name:
-    #         raise ValueError("section_name deve ser definido na subclasse.")
-    #     return self.config.get(self.section_name, key, fallback=fallback, default_section=self.default_section)
-
     def authenticate(self):
         # Implementação de autenticação comum a todos os pipelines, se necessário
         pass

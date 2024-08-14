@@ -55,27 +55,32 @@ class RemoteDockerDeployPipeline(BaseDeployPipeline):
         """Pipeline para buildar e publicar containers em máquinas remotas"""
         try:
             # Verificar o contexto Docker usando o contexto armazenado
-            self.docker_manager.verificar_contexto_docker(self.config['docker']['docker_context'])
+            self.docker_manager.mudar_contexto_docker(self.config['docker']['docker_context'])
 
             # Obter a URL do CodeArtifact com token
             codeartifact_url = self.aws_manager.get_codeartifact_url()
 
             # Obter a versão do pacote do CodeArtifact
-            package_version = self.aws_manager.get_package_info(self.config['publish']['package_name'])
+            package_info = self.aws_manager.get_package_info(self.config['publish']['package_name'])
 
-            image_name = self.config['aws']['codeartifact_repository_name']
+            # Ordena as versões pela chave 'version' e retorna a última
+            latest_package = max(package_info, key=lambda v: v['version'])
+            latest_version = latest_package['version']
+            self.log.info(f"Última versão do pacote '{self.config['publish']['package_name']}' obtida: {latest_version}")
+
+            image_name = self.config['publish']['package_name']
             dockerfile_path = os.path.abspath(os.getcwd())
 
             # Verifica se a imagem já existe e remove se necessário
-            if self.docker_manager.verificar_existencia_imagem(self.ctx, image_name, package_version):
-                self.docker_manager.remover_imagem(image_name, package_version)
+            if self.docker_manager.verificar_existencia_imagem(image_name, latest_version):
+                self.docker_manager.remover_imagem(image_name, latest_version)
 
             # Build da imagem Docker
-            self.docker_manager.build_docker_image(dockerfile_path, image_name, package_version, codeartifact_url)
+            self.docker_manager.build_docker_image(dockerfile_path, image_name, latest_version, codeartifact_url)
 
-            # Taguear a imagem com a versão do pacote CodeArtifact e 'latest'
-            self.log.info("Tagueando a imagem como 'latest'...")
-            self.docker_manager.tag_image(image_name, package_version, "latest")
+            # Taguear a imagem com a versão do pacote
+            self.docker_manager.tag_image(image_name, latest_version, "latest")
+
 
             self.log.info("Deploy completado com sucesso!")
         except Exception as e:
@@ -90,4 +95,4 @@ class EcsDeployPipeline(BaseDeployPipeline):
         self.aws_manager = AWSManager()        # Inicializa o gerenciador AWS
     
     def execute(self):
-        raise NotImplementedError
+        self.log.warning("EcsDeployPipeline ainda não foi implementado!")

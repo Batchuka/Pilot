@@ -5,6 +5,13 @@ from pilot.src.config import Config
 from invoke import Context as InvokeContext
 from invoke import UnexpectedExit
 
+class CustomResult:
+    def __init__(self, stdout="", stderr="", return_code=-1):
+        self.stdout = stdout
+        self.stderr = stderr
+        self.return_code = return_code
+
+
 class Context(Singleton):
 
     def _initialize(self):
@@ -27,17 +34,19 @@ class Context(Singleton):
         try:
             # Determina se o output deve ser ocultado com base na verbosidade
             if verbosity == 'vvv':
-                result = self.invoke_context.run(command, hide=False)
+                result = self.invoke_context.run(command, hide=False, warn=True)
             elif verbosity == 'vv':
                 result = self.invoke_context.run(command, hide=True, warn=True)
             else:
                 result = self.invoke_context.run(command, hide=True)
+            # Retorne o resultado normal se não houver erros
+            return result
         except UnexpectedExit as e:
-            # Captura exceções relacionadas a falhas na execução do comando
             self.log.error(f"Erro ao executar o comando: {command}\n{e.result.stderr}")
+            return CustomResult(stdout=e.result.stdout, stderr=e.result.stderr, return_code=e.result.return_code)
         except Exception as e:
-            # Captura quaisquer outras exceções não esperadas
             self.log.error(f"Erro inesperado ao executar o comando: {command}\n{str(e)}")
+            return CustomResult(stderr=str(e), return_code=-1)
 
     def get_click_option(self, option_name):
         """Obtém uma opção do contexto do Click."""

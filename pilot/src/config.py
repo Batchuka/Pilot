@@ -9,25 +9,32 @@ from pilot.src.log import LogManager
 class Config(Singleton):
 
     def _initialize(self):
+        self.log = LogManager()
         self.project_root = os.path.abspath(os.getcwd())
-        self.config_file = os.path.join(self.project_root, '.conf')
+        self.config_file = os.path.join(self.project_root, 'pilot.conf')
         self.config = configparser.ConfigParser()
         self.load_config()
-        self.log = LogManager()
 
     def load_config(self, specific_config=None):
-        """Carrega as configurações do arquivo .conf ou de um arquivo específico."""
-        config_path = self.config_file if not specific_config else os.path.join(self.project_root, specific_config)
-        
-        if not os.path.exists(config_path):
-            raise FileNotFoundError(f"Config file not found at: {config_path}")
-        
-        self.config.read(config_path)  # Lê o arquivo de configuração usando configparser
+        """Carrega as configurações do arquivo pilot.conf ou de um arquivo específico."""
+        try:
+            config_path = self.config_file if not specific_config else os.path.join(self.project_root, specific_config)
+            
+            if not os.path.exists(config_path):
+                self.log.error(f"Não encontrou 'pilot.conf' no caminho: {config_path}")
+                return  # Retorna caso o arquivo não seja encontrado
+            
+            self.config.read(config_path)  # Lê o arquivo de configuração usando configparser
+        except Exception as e:
+            self.log.error(f"Erro ao carregar o arquivo de configuração: {str(e)}")
 
     def save_config(self):
         """Salva as configurações no arquivo .conf."""
-        with open(self.config_file, 'w') as configfile:
-            self.config.write(configfile)
+        try:
+            with open(self.config_file, 'w') as configfile:
+                self.config.write(configfile)
+        except Exception as e:
+            self.log.error(f"Erro ao salvar o arquivo de configuração: {str(e)}")
 
     def get_config(self):
         """Retorna a instância do ConfigParser."""
@@ -58,7 +65,8 @@ class Config(Singleton):
             caller_instance = caller_frame.f_locals.get('self', None)
             if caller_instance:
                 return caller_instance
-            else:
-                raise AttributeError("Não foi possível determinar a instância da classe chamadora.")
+        except Exception as e:
+            self.log.error(f"Erro ao determinar a classe invocante: {str(e)}")
+            return None
         finally:
             del frame  # Evita possíveis ciclos de referência

@@ -8,90 +8,138 @@ from pilot.base.manager import BaseManager
 
 class GitManager(BaseManager):
 
-    def __init__(self):
+    def __init__(self, repo_path=None):
         super().__init__()
         self.section_name = 'git'
         self.default_section = 'default_git'
-
-    def __init__(self, repo_path):
-        self.repo_path = Path(repo_path).resolve()
-        self.hooks_path = self.repo_path / ".git" / "hooks"
+        self.repo_path = Path(repo_path).resolve() if repo_path else None
+        self.hooks_path = None
         self.os_type = platform.system().lower()
         self.scripts_path = Path(__file__).resolve().parent.parent / "scripts" / ("linux" if "linux" in self.os_type else "windows")
 
-    def initialize_hooks(self):
-        """Instala os hooks no repositório atual."""
-        self.install_hooks()
-        self.configure_for_user()
+    def init(self):
+        """Inicializa a sessão 'git' no arquivo de configuração e configura o ambiente Git."""
+        if not self.config.has_section(self.section_name):
+            self.config.add_section(self.section_name)
+            self.save_config()
 
-    def install_hooks(self):
+        repo_path = self.encontra_repo_git(Path(os.getcwd()))
+        if repo_path:
+            self.repo_path = repo_path
+            self.config.set(self.section_name, 'repo_path', str(repo_path))
+            self.save_config()
+            self.log.info(f"Repositório Git encontrado em: {repo_path}")
+            self.configura_repo()
+        else:
+            self.log.warning("Nenhum repositório Git encontrado na pasta atual ou nas pastas pai.")
+
+    def encontra_repo_git(self, start_path):
+        """Procura por um repositório Git na pasta atual ou nas pastas pai."""
+        current_path = start_path
+        while current_path != current_path.parent:
+            if (current_path / ".git").exists():
+                return current_path
+            current_path = current_path.parent
+        return None
+
+    def instala_hooks(self):
         """Copia os scripts de hook para o diretório de hooks do Git."""
+        self.hooks_path = self.repo_path / ".git" / "hooks"
         for script in self.scripts_path.glob("*"):
             hook_name = script.name
             dest_path = self.hooks_path / hook_name
             copyfile(script, dest_path)
             os.chmod(dest_path, 0o755)  # Permissão de execução
 
-    def configure_for_user(self):
-        """Configura o Git globalmente para sempre usar os hooks."""
-        if self.os_type == 'windows':
-            git_config_cmd = 'git config --global core.hooksPath C:/Users/{username}/.githooks'.format(username=os.getlogin())
-        else:
-            git_config_cmd = 'git config --global core.hooksPath ~/.githooks'
-
-        self.ctx(git_config_cmd)
-
-        # Copia os hooks para o diretório de hooks global
-        global_hooks_path = Path.home() / ".githooks"
-        global_hooks_path.mkdir(exist_ok=True)
-
-        for script in self.scripts_path.glob("*"):
-            dest_path = global_hooks_path / script.name
-            copyfile(script, dest_path)
-            os.chmod(dest_path, 0o755)  # Permissão de execução
-
-    def apply_hooks_to_cloned_repo(self):
-        """Copia os hooks para um repositório clonado."""
-        self.install_hooks()
-
-    def check_modifications_and_suggest_commit(self):
+    def checa_diff_sugere_commit(self):
         """Verifica a quantidade de modificações e sugere um commit."""
-        changed_files = self.ctx.run(["git", "status", "--porcelain"], cwd=self.repo_path, capture_output=True, text=True).stdout
+        changed_files = self.ctx.run("git status --porcelain").stdout
         num_changes = len(changed_files.splitlines())
 
-        if num_changes > 10:  # Um limiar para sugerir commit
-            self.lo(f"Você tem {num_changes} arquivos modificados. Considere fazer um commit.")
+        if num_changes > 5:  # Um limiar para sugerir commit
+            self.log.warning(f"Você tem MAIS DE {num_changes} ARQUIVOS MODIFICADOS! Considere fazer COMMITS MENORES.")
 
-    def prompt_for_tag_after_commit(self):
-        """Pergunta ao usuário se deseja adicionar uma tag após um commit."""
-        self.ctx.run(["git", "commit"], cwd=self.repo_path)
+    def pergunta_severidade_alteracao(self):
+        """Pergunta ao usuário sobre a severidade das mudanças para criar uma tag."""
+        while True:
+            severity_input = input("Minha alteração é (major[1], feature[2], bugfix[3]): ")
+            type_mapping = {'1': "major", '2': "feature", '3': "bugfix"}
+            severity = type_mapping.get(severity_input)
 
-        add_tag = input("Você deseja adicionar uma tag para este commit? (s/n): ")
-        if add_tag.lower() == 's':
-            severity = input("Qual a severidade das mudanças? (bugfix, feature, major): ")
-            self.create_semantic_version_tag(severity)
+            if severity:
+                return severity
+            else:
+                self.log.error("Tipo de alteração inválido. Por favor, escolha 1, 2 ou 3.")
 
-    def create_semantic_version_tag(self, severity):
+    def cria_tag_semantica(self, severity):
         """Cria uma tag de versão semântica com base na severidade."""
-        last_tag = self.ctx.run(["git", "describe", "--tags", "--abbrev=0"], cwd=self.repo_path, capture_output=True, text=True).stdout.strip()
-        major, minor, patch = map(int, last_tag.lstrip('v').split('.'))
+        try:
+            last_tag = self.ctx.run("git describe --tags --abbrev=0").stdout.strip()
 
-        if severity == 'major':
-            major += 1
-            minor = 0
-            patch = 0
-        elif severity == 'feature':
-            minor += 1
-            patch = 0
-        elif severity == 'bugfix':
-            patch += 1
+            major, minor, patch = map(int, last_tag.lstrip('v').split('.'))
 
-        new_tag = f"v{major}.{minor}.{patch}"
-        self.ctx.run(["git", "tag", "-a", new_tag, "-m", f'Release version {new_tag}'], cwd=self.repo_path)
-        self.ctx.run(["git", "push", "origin", new_tag], cwd=self.repo_path)
+            if severity == 'major':
+                major += 1
+                minor = 0
+                patch = 0
+            elif severity == 'feature':
+                minor += 1
+                patch = 0
+            elif severity == 'bugfix':
+                patch += 1
 
-    def setup_repo(self):
+            new_tag = f"v{major}.{minor}.{patch}"
+            self.ctx.run(f'git tag -a \"{new_tag}\" -m \"Release version {new_tag}\"')
+            self.log.info(f"Tag {new_tag} criada e enviada com sucesso.")
+        except Exception as e:
+            self.log.error(f"Erro ao criar tag semântica: {str(e)}")
+
+    def configura_repo(self):
         """Instala os hooks e configura o repositório."""
-        self.initialize_hooks()
-        self.check_modifications_and_suggest_commit()
-        self.prompt_for_tag_after_commit()
+        self.instala_hooks()
+
+    def commit(self):
+        """Executa o processo completo de commit, desde a criação da mensagem até o push."""
+        # Verifica se há um repositório configurado
+        if not self.repo_path:
+            self.init()
+
+        # Se ainda não houver repositório, encerra a operação
+        if not self.repo_path:
+            self.log.error("Não foi possível encontrar um repositório Git para operar.")
+            return
+
+        # Verifica a quantidade de mudanças e sugere um commit
+        self.checa_diff_sugere_commit()
+
+        # Coleta a mensagem de commit
+        impact = input("Se aplicado, meu commit (irá...): ")
+        modification = input("O meu commit (modificou...): ")
+
+        # Pega a severidade da modificação
+        severidade = self.pergunta_severidade_alteracao()
+
+        commit_message = f"[Impacto]: {impact} [Modificações]: {modification} [Severidade]: {severidade}"
+
+        # Executa o commit com a mensagem formatada
+        result = self.ctx.run("git add .")
+
+        if result.return_code == 0:
+            commit_command = f'git commit -m "{commit_message}"'
+            result = self.ctx.run(commit_command)
+            
+            if result.returncode == 0:
+                self.log.info("Commit realizado com sucesso.")
+            else:
+                self.log.error("Erro ao realizar o commit.")
+        else:
+            self.log.error("Erro ao adicionar arquivos ao commit.")
+
+        if result:
+            self.log.info("Commit realizado com sucesso.")
+
+            # Aplica tag no repo com base na severidade
+            self.cria_tag_semantica(severidade)
+
+        else:
+            self.log.error("Falha ao adicionar tag semântica")

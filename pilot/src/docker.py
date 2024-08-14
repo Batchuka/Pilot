@@ -23,7 +23,28 @@ class DockerManager(BaseManager):
         result = self.ctx.run(f"docker context show")
         current_context = result.stdout.strip()
         if current_context != expected_context:
-            raise Exception(f"Contexto Docker incorreto. Esperado: {expected_context}, Atual: {current_context}")
+            self.log.error(f"Contexto Docker incorreto. Esperado: {expected_context}, Atual: {current_context}")
+
+    def mudar_contexto_docker(self, novo_contexto):
+
+        self.log.info(f"Mudando o contexto Docker para: {novo_contexto}...")
+        
+        # Verifica o contexto atual
+        result = self.ctx.run(f"docker context show")
+        current_context = result.stdout.strip()
+        
+        # Se o contexto já estiver correto, não faz nada
+        if current_context == novo_contexto:
+            self.log.info(f"O contexto Docker já está definido para {novo_contexto}.")
+            return
+        
+        # Muda para o novo contexto
+        result = self.ctx.run(f"docker context use {novo_contexto}")
+        
+        if result is None or result.return_code != 0:
+            self.log.error(f"Erro ao tentar mudar o contexto Docker para: {novo_contexto}")
+        
+        self.log.info(f"Contexto Docker alterado com sucesso para: {novo_contexto}.")
 
     def remover_imagem(self, image_name, version):
         self.log_mng.info(f"Removendo imagem.")
@@ -55,3 +76,19 @@ class DockerManager(BaseManager):
         
         except Exception as e:
             self.log.error(f"Erro durante o processo de build da imagem Docker: {e}")
+
+    def tag_image(self, image_name, source_tag, target_tag):
+
+        self.log.info(f"Tagueando a imagem '{image_name}:{source_tag}' como '{target_tag}'...")
+        try:
+            command = (
+                f"docker tag {image_name}:{source_tag} {image_name}:{target_tag}"
+            )
+            result = self.ctx.run(command)
+
+            if result.return_code == 0:
+                self.log.info(f"Imagem '{image_name}:{source_tag}' foi tagueada com sucesso como '{image_name}:{target_tag}'.")
+            else:
+                self.log.error(f"Falha ao taguear a imagem '{image_name}:{source_tag}' como '{target_tag}': {result.stderr}")
+        except Exception as e:
+            self.log.error(f"Erro inesperado ao taguear a imagem '{image_name}:{source_tag}' como '{target_tag}': {str(e)}")

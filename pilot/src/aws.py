@@ -1,6 +1,7 @@
 # pilot\src\aws.py
 import os
 import json
+import subprocess
 
 from pilot.base.manager import BaseManager
 from pilot.default.aws import AWS_DEFAULTS
@@ -51,7 +52,7 @@ class AWSManager(BaseManager):
         result = self.ctx.run(command)
         credentials = result.stdout.strip()
         
-        if result.returncode == 0:
+        if result.return_code == 0:
             self.log.info("Role assumida com sucesso. Credenciais armazenadas.")
         else:
             self.log.warning(f"Falha ao assumir role: {credentials}")

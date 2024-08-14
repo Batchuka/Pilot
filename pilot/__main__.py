@@ -54,6 +54,13 @@ def deploy():
     manager = DeployManager()
     manager.execute_deploy()
 
+@cli.command()
+@click.option('--repo-path', default='.', help='Caminho do repositório Git. Padrão é o diretório atual.')
+def commit(repo_path):
+    """Executa o processo completo de commit, desde a criação da mensagem até o push."""
+    git_manager = GitManager(repo_path)
+    git_manager.commit()
+
 
 if __name__ == "__main__":
-    deploy()
+    commit()
