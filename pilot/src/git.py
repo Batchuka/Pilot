@@ -85,10 +85,17 @@ class GitManager(BaseManager):
     def cria_tag_semantica(self, severity):
         """Cria uma tag de versão semântica com base na severidade."""
         try:
-            last_tag = self.ctx.run("git describe --tags --abbrev=0").stdout.strip()
+            # Primeiro, tenta obter a última tag usando o comando git tag
+            result = self.ctx.run("git tag --sort=-creatordate | head -n 1", capture_output=True, text=True)
+            last_tag = result.stdout.strip()
+
+            # Se não encontrar nenhuma tag, cria uma tag inicial
+            if not last_tag:
+                last_tag = "v0.0.0"
 
             major, minor, patch = map(int, last_tag.lstrip('v').split('.'))
 
+            # Atualiza a versão com base na severidade
             if severity == 'major':
                 major += 1
                 minor = 0
@@ -101,6 +108,7 @@ class GitManager(BaseManager):
 
             new_tag = f"v{major}.{minor}.{patch}"
             self.ctx.run(f'git tag -a \"{new_tag}\" -m \"Release version {new_tag}\"')
+            self.ctx.run(f"git push origin {new_tag}")
             self.log.info(f"Tag {new_tag} criada e enviada com sucesso.")
         except Exception as e:
             self.log.error(f"Erro ao criar tag semântica: {str(e)}")
