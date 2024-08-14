@@ -62,6 +62,6 @@ def commit(amend):
     git_manager = GitManager()
     git_manager.execute_commit(amend)
 
-
+# Comentário besta
 if __name__ == "__main__":
     commit()
