@@ -10,6 +10,7 @@ class BaseManager(ABC):
 
     def __init__(self):
         self.config = Config().config  # Obtém a configuração a partir da instância Singleton Config
+        self.save_config = Config().save_config
         self.ctx = Context()  # Instancia o contexto para uso nos managers
         self.log = LogManager()
         self.section_name = None  # Para ser definido nas subclasses

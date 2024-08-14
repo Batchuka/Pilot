@@ -51,13 +51,24 @@ class GitManager(BaseManager):
             copyfile(script, dest_path)
             os.chmod(dest_path, 0o755)  # Permissão de execução
 
-    def checa_diff_sugere_commit(self):
-        """Verifica a quantidade de modificações e sugere um commit."""
-        changed_files = self.ctx.run("git status --porcelain").stdout
+    def verifica_mudanca(self):
+        """Verifica a quantidade de mudanças, sugere um commit e interrompe se não houver mudanças."""
+
+        # Verifica se há modificações no repositório
+        status_result = self.ctx.run("git status --porcelain")
+        changed_files = status_result.stdout.strip()
+
+        if not changed_files:
+            self.log.info("Nenhuma modificação detectada. Nenhum commit será realizado.")
+            return False
+
         num_changes = len(changed_files.splitlines())
 
-        if num_changes > 5:  # Um limiar para sugerir commit
-            self.log.warning(f"Você tem MAIS DE {num_changes} ARQUIVOS MODIFICADOS! Considere fazer COMMITS MENORES.")
+        # Sugere fazer um commit se houver um número considerável de mudanças
+        if num_changes > 10:  # Defina o limiar de sua escolha
+            self.log.warning(f"Você tem {num_changes} arquivos modificados. Considere fazer commits menores.")
+
+        return True
 
     def pergunta_severidade_alteracao(self):
         """Pergunta ao usuário sobre a severidade das mudanças para criar uma tag."""
@@ -98,7 +109,7 @@ class GitManager(BaseManager):
         """Instala os hooks e configura o repositório."""
         self.instala_hooks()
 
-    def commit(self):
+    def execute_commit(self, amend=False):
         """Executa o processo completo de commit, desde a criação da mensagem até o push."""
         # Verifica se há um repositório configurado
         if not self.repo_path:
@@ -110,37 +121,53 @@ class GitManager(BaseManager):
             return
 
         # Verifica a quantidade de mudanças e sugere um commit
-        self.checa_diff_sugere_commit()
+        if not self.verifica_mudanca():
+            return  # Interrompe se não houver mudanças
 
-        # Coleta a mensagem de commit
-        impact = input("Se aplicado, meu commit (irá...): ")
-        modification = input("O meu commit (modificou...): ")
-
-        # Pega a severidade da modificação
-        severidade = self.pergunta_severidade_alteracao()
-
-        commit_message = f"[Impacto]: {impact} [Modificações]: {modification} [Severidade]: {severidade}"
-        commit_message = commit_message.encode('utf-8').decode('utf-8')
-
-        # Executa o commit com a mensagem formatada
-        result = self.ctx.run("git add .")
-
-        if result.return_code == 0:
-            commit_command = f'git commit -m "{commit_message}"'
-            result = self.ctx.run(commit_command)
-            
+        if amend:
+            # Executa o git add para adicionar as novas mudanças
+            result = self.ctx.run("git add .")
             if result.return_code == 0:
-                self.log.info("Commit realizado com sucesso.")
+                # Adiciona as mudanças ao último commit sem modificar a mensagem ou aplicar uma nova tag
+                commit_command = 'git commit --amend --no-edit'
+                result = self.ctx.run(commit_command)
+
+                if result.return_code == 0:
+                    self.log.info("Mudanças adicionadas ao commit anterior com sucesso.")
+                else:
+                    self.log.error("Erro ao adicionar mudanças ao commit anterior.")
             else:
-                self.log.error("Erro ao realizar o commit.")
+                self.log.error("Erro ao adicionar arquivos ao commit.")
         else:
-            self.log.error("Erro ao adicionar arquivos ao commit.")
+            # Coleta a mensagem de commit
+            impact = input("Se aplicado, meu commit (irá...): ")
+            modification = input("O meu commit (modificou...): ")
 
-        if result:
-            self.log.info("Commit realizado com sucesso.")
+            # Pega a severidade da modificação
+            severidade = self.pergunta_severidade_alteracao()
 
-            # Aplica tag no repo com base na severidade
-            self.cria_tag_semantica(severidade)
+            commit_message = f"[Impacto]: {impact} [Modificações]: {modification} [Severidade]: {severidade}"
+            commit_message = commit_message.encode('utf-8').decode('utf-8')
 
-        else:
-            self.log.error("Falha ao adicionar tag semântica")
+            # Executa o commit com a mensagem formatada
+            result = self.ctx.run("git add .")
+
+            if result.return_code == 0:
+                commit_command = f'git commit -m "{commit_message}"'
+                result = self.ctx.run(commit_command)
+                
+                if result.return_code == 0:
+                    self.log.info("Commit realizado com sucesso.")
+                else:
+                    self.log.error("Erro ao realizar o commit.")
+            else:
+                self.log.error("Erro ao adicionar arquivos ao commit.")
+
+            if result:
+                self.log.info("Commit realizado com sucesso.")
+
+                # Aplica tag no repo com base na severidade
+                self.cria_tag_semantica(severidade)
+
+            else:
+                self.log.error("Falha ao adicionar tag semântica")

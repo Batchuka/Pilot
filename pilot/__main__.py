@@ -54,12 +54,13 @@ def deploy():
     manager = DeployManager()
     manager.execute_deploy()
 
-@cli.command()
-@click.option('--repo-path', default='.', help='Caminho do repositório Git. Padrão é o diretório atual.')
-def commit(repo_path):
-    """Executa o processo completo de commit, desde a criação da mensagem até o push."""
-    git_manager = GitManager(repo_path)
-    git_manager.commit()
+@click.command()
+@click.option('-a', '--amend', is_flag=True, help='Faz append à mensagem de commit anterior.')
+# @click.pass_context
+def commit(amend):
+    """Executa o processo completo de commit, com ou sem append na mensagem."""
+    git_manager = GitManager()
+    git_manager.execute_commit(amend)
 
 
 if __name__ == "__main__":
