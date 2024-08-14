@@ -120,6 +120,7 @@ class GitManager(BaseManager):
         severidade = self.pergunta_severidade_alteracao()
 
         commit_message = f"[Impacto]: {impact} [Modificações]: {modification} [Severidade]: {severidade}"
+        commit_message = commit_message.encode('utf-8').decode('utf-8')
 
         # Executa o commit com a mensagem formatada
         result = self.ctx.run("git add .")
@@ -128,7 +129,7 @@ class GitManager(BaseManager):
             commit_command = f'git commit -m "{commit_message}"'
             result = self.ctx.run(commit_command)
             
-            if result.returncode == 0:
+            if result.return_code == 0:
                 self.log.info("Commit realizado com sucesso.")
             else:
                 self.log.error("Erro ao realizar o commit.")
