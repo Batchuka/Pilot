@@ -60,7 +60,7 @@ def deploy():
 def commit(amend):
     """Executa o processo completo de commit, com ou sem append na mensagem."""
     git_manager = GitManager()
-    git_manager.execute_commit(amend)
+    git_manager.execute_commit(amend = True)
 
 # Comentário besta
 if __name__ == "__main__":
