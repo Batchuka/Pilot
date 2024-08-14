@@ -86,12 +86,9 @@ class GitManager(BaseManager):
         """Cria uma tag de versão semântica com base na severidade."""
         try:
             # Primeiro, tenta obter a última tag usando o comando git tag
-            result = self.ctx.run("git tag --sort=-creatordate | head -n 1", capture_output=True, text=True)
-            last_tag = result.stdout.strip()
-
-            # Se não encontrar nenhuma tag, cria uma tag inicial
-            if not last_tag:
-                last_tag = "v0.0.0"
+            result = self.ctx.run("git tag --sort=-creatordate")
+            tags = result.stdout.strip().splitlines()
+            last_tag = tags[-1] if tags else "v0.0.0"
 
             major, minor, patch = map(int, last_tag.lstrip('v').split('.'))
 
