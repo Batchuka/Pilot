@@ -64,7 +64,7 @@ class RemoteDockerDeployPipeline(BaseDeployPipeline):
             package_info = self.aws_manager.get_package_info(self.config['publish']['package_name'])
 
             # Ordena as versões pela chave 'version' e retorna a última
-            latest_package = max(package_info, key=lambda v: v['version'])
+            latest_package = max(package_info, key=lambda v: list(map(int, v['version'].split('.')))) # é feito assim para comparar os inteiros e não a string
             latest_version = latest_package['version']
             self.log.info(f"Última versão do pacote '{self.config['publish']['package_name']}' obtida: {latest_version}")
 

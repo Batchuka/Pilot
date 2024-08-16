@@ -54,14 +54,14 @@ def deploy():
     manager = DeployManager()
     manager.execute_deploy()
 
-@click.command()
+@cli.command()
 @click.option('-a', '--amend', is_flag=True, help='Faz append à mensagem de commit anterior.')
-# @click.pass_context
-def commit(amend):
+@click.pass_context
+def commit(ctx, amend):
     """Executa o processo completo de commit, com ou sem append na mensagem."""
     git_manager = GitManager()
-    git_manager.execute_commit(amend = True)
+    git_manager.execute_commit(amend)
 
 # Comentário besta
 if __name__ == "__main__":
-    commit()
+    deploy()

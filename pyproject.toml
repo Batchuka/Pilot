@@ -12,5 +12,12 @@ requires-python = ">=3.11"
 [project.scripts]
 pilot = "pilot.__main__:cli"
 
+[tool.poetry.dependencies]
+build = "*"
+poetry = "*"
+rich = "*"
+click = "*"
+twine = "*"
+
 [tool.setuptools.packages.find]
 where = ["."]
