@@ -2,6 +2,7 @@
 import os
 import inspect
 import configparser
+import sys
 
 from pilot.singleton import Singleton
 from pilot.src.log import LogManager
@@ -27,6 +28,7 @@ class Config(Singleton):
             self.config.read(config_path)  # Lê o arquivo de configuração usando configparser
         except Exception as e:
             self.log.error(f"Erro ao carregar o arquivo de configuração: {str(e)}")
+            sys.exit(1)  # Interrompe o processo com um código de saída 1 (indicando erro)
 
     def save_config(self):
         """Salva as configurações no arquivo .conf."""

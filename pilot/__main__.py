@@ -6,6 +6,7 @@ from pilot.src.aws import AWSManager
 from pilot.src.docker import DockerManager
 from pilot.src.git import GitManager
 from pilot.src.deploy import DeployManager
+from pilot.src.publish import PublishManager
 
 @click.group()
 @click.option('--some-option', default='default_value')
@@ -55,6 +56,11 @@ def deploy():
     manager.execute_deploy()
 
 @cli.command()
+def publish():
+    """Executa o processo de deploy configurado."""
+    raise NotImplementedError("... Em breve")
+
+@cli.command()
 @click.option('-a', '--amend', is_flag=True, help='Faz append à mensagem de commit anterior.')
 @click.pass_context
 def commit(ctx, amend):
@@ -64,4 +70,5 @@ def commit(ctx, amend):
 
 # Comentário besta
 if __name__ == "__main__":
+    # publish()
     deploy()

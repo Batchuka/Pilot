@@ -58,13 +58,37 @@ class AWSManager(BaseManager):
             self.log.warning(f"Falha ao assumir role: {credentials}")
             return None
 
-    def authenticate_pip_and_twine(self):
+    def authenticate_twine(self):
         """
         Configura o pip e o twine para usar o CodeArtifact com as credenciais da AWS.
         """
         try:
             codeartifact_url = self.get_codeartifact_url()
-            self.log.info(f"Autenticando pip e twine com o CodeArtifact: {codeartifact_url}")
+            self.log.info(f"Autenticando twine com o CodeArtifact: {codeartifact_url}")
+
+            # Autenticar twine
+            self.ctx.run(
+                f"aws codeartifact login --tool twine "
+                f"--repository {self.config['aws']['codeartifact_repository']} "
+                f"--domain {self.config['aws']['codeartifact_domain']} "
+                f"--domain-owner {self.config['aws']['aws_account_id']} "
+                f"--region {self.config['aws']['aws_default_region']}"
+            )
+            
+            # Configurar pip.conf
+            self.update_pip_conf()
+
+            self.log.info("Autenticação configurada com sucesso.")
+        except Exception as e:
+            self.log.error(f"Erro ao autenticar pip e twine: {e}")
+
+    def authenticate_pip(self):
+        """
+        Configura o pip e o twine para usar o CodeArtifact com as credenciais da AWS.
+        """
+        try:
+            codeartifact_url = self.get_codeartifact_url()
+            self.log.info(f"Autenticando pip com o CodeArtifact: {codeartifact_url}")
 
             # Autenticar twine
             self.ctx.run(

@@ -1,34 +1,20 @@
 import os
-import subprocess
 
 from pilot.base.manager import BaseManager
 from pilot.src.git import GitManager
 from pilot.src.log import LogManager
-from pilot.src.build import BuildManager #type:ignore ← NÃO EXISTE
+# from pilot.src.build import BuildManager #type:ignore ← NÃO EXISTE
 
 class PublishManager(BaseManager):
     def __init__(self, project_path='.'):
         super().__init__()
         self.project_path = os.path.abspath(project_path)
         self.git_manager = GitManager(self.project_path)
-        self.log_manager = LogManager()
-        self.build_manager = BuildManager()
+        # self.build_manager = BuildManager()
 
     def publish_package(self, ctx):
         try:
-            self.log_manager.info("Publishing Package on CodeArtifact...")
-
-            # Commit, tag e push
-            summary = input("Enter commit summary: ")
-            description = input("Enter commit description: ")
-
-            latest_version = self.git_manager.get_latest_version_tag()
-            suggested_version = self.git_manager.increment_version(latest_version.strip('v'))
-            new_version = input(f"Enter new version (suggested: {suggested_version}): ") or suggested_version
-
-            branch = self.git_manager.get_current_branch()
-
-            self.git_manager.commit_and_tag(summary, description, new_version, branch)
+            self.log.info("Publishing Package on CodeArtifact...")
 
             # Build
             self.build_manager.build(ctx, project_path=self.project_path)
@@ -44,10 +30,10 @@ class PublishManager(BaseManager):
             # Publicar o pacote no CodeArtifact usando twine
             self.upload_to_codeartifact(ctx)
 
-            self.log_manager.info(f"Package {project_name} was successfully published on version {project_version}")
+            self.log.info(f"Package {project_name} was successfully published on version {project_version}")
 
         except Exception as e:
-            self.log_manager.error(f"Error during publishing process: {e}")
+            self.log.error(f"Error during publishing process: {e}")
 
     def authenticate_codeartifact(self, ctx, project_config):
         ctx.run(
