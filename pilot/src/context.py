@@ -1,7 +1,10 @@
 # pilot\src\context.py
+
 from pilot.singleton import Singleton
-from pilot.src.log import LogManager
+from pilot.src.log import Logger
 from pilot.src.config import Config
+from pilot.default.context import CONTEXT_DEFAULTS
+
 from invoke import Context as InvokeContext
 from invoke import UnexpectedExit
 
@@ -16,12 +19,23 @@ class Context(Singleton):
 
     def _initialize(self):
         # Cria um contexto do Invoke para execução de comandos de terminal
+        self.section_name = 'context'
+        self.default_section = 'context_git'
         self.invoke_context = InvokeContext()
-        self.log = LogManager()
+        self.log = Logger()
         self.config = Config().config
+        self.init()
 
         # Inicializa o contexto do Click, se necessário
         self.click_context = None
+
+    def init(self):
+        """Inicializa a seção 'log' no arquivo de configuração."""
+        if not self.config.has_section(self.section_name):
+            self.config.add_section(self.section_name)
+            for key, default_value in CONTEXT_DEFAULTS.items():
+                self.config.set(self.section_name, key, self.config.get(self.section_name, key, fallback=default_value))
+            Config().save_config()  # Salva as configurações no arquivo pilot.conf
 
     def set_click_context(self, click_ctx):
         """Define o contexto do Click."""
@@ -29,7 +43,7 @@ class Context(Singleton):
 
     def run(self, command):
         """Executa um comando no terminal usando o Invoke e captura erros."""
-        verbosity = self.config['log']['verbosity']
+        verbosity = self.config['context']['verbosity']
 
         try:
             # Determina se o output deve ser ocultado com base na verbosidade

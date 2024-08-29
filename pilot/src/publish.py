@@ -2,7 +2,6 @@ import os
 
 from pilot.base.manager import BaseManager
 from pilot.src.git import GitManager
-from pilot.src.log import LogManager
 # from pilot.src.build import BuildManager #type:ignore ← NÃO EXISTE
 
 class PublishManager(BaseManager):
@@ -11,6 +10,17 @@ class PublishManager(BaseManager):
         self.project_path = os.path.abspath(project_path)
         self.git_manager = GitManager(self.project_path)
         # self.build_manager = BuildManager()
+
+    def init(self):
+        """Inicializa a seção 'log' no arquivo de configuração."""
+        if not self.config.has_section(self.section_name):
+            
+            self.config.add_section(self.section_name)
+            
+            for key, default_value in LOG_DEFAULTS.items():
+                self.config.set(self.section_name, key, self.config.get(self.section_name, key, fallback=default_value))
+            
+            self.save_config()
 
     def publish_package(self, ctx):
         try:

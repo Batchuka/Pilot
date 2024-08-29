@@ -6,6 +6,7 @@ from pilot.src.aws import AWSManager
 from pilot.src.docker import DockerManager
 from pilot.src.git import GitManager
 from pilot.src.deploy import DeployManager
+from pilot.src.vscode import VscodeManager
 from pilot.src.publish import PublishManager
 
 @click.group()
@@ -33,7 +34,7 @@ def doc(doc_name):
 @click.argument('manager')
 @click.pass_context
 def init(ctx, manager):
-    """Inicializa o manager específico: aws, docker, git, etc."""
+    """Inicializa o manager específico: aws, docker, git, vscode, etc."""
     if manager == 'aws':
         aws_manager = AWSManager()
         aws_manager.init()
@@ -46,8 +47,24 @@ def init(ctx, manager):
         git_manager = GitManager()
         git_manager.init()
         click.echo("Git Manager inicializado.")
+    elif manager == 'vscode':
+        vscode_manager = VscodeManager()
+        vscode_manager.init()
+        click.echo("Vscode Manager inicializado.")
     else:
         click.echo(f"Manager '{manager}' não reconhecido.")
+
+@cli.command()
+@click.argument('manager')
+@click.pass_context
+def update(ctx, manager):
+    """Atualiza as configurações para o manager específico: vscode, etc."""
+    if manager == 'vscode':
+        vscode_manager = VscodeManager()
+        vscode_manager.update()
+        click.echo("Configurações do VS Code atualizadas.")
+    else:
+        click.echo(f"Manager '{manager}' não possui função de atualização.")
 
 @cli.command()
 def deploy():
@@ -68,7 +85,8 @@ def commit(ctx, amend):
     git_manager = GitManager()
     git_manager.execute_commit(amend)
 
-# Comentário besta
+
 if __name__ == "__main__":
     # publish()
-    deploy()
+    # deploy()
+    pass

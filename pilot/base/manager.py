@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from pilot.src.config import Config
 from pilot.src.context import Context
-from pilot.src.log import LogManager
+from pilot.src.log import Logger
 
 class BaseManager(ABC):
     """
@@ -12,7 +12,7 @@ class BaseManager(ABC):
         self.config = Config().config  # Obtém a configuração a partir da instância Singleton Config
         self.save_config = Config().save_config
         self.ctx = Context()  # Instancia o contexto para uso nos managers
-        self.log = LogManager()
+        self.log = Logger()
         self.section_name = None  # Para ser definido nas subclasses
         self.default_section = None  # Para ser definido nas subclasses
 
@@ -27,3 +27,9 @@ class BaseManager(ABC):
     def init(self, **kwargs):
         """Inicializa a sessão do manager no arquivo de configuração."""
         pass
+    
+    @abstractmethod
+    def update(self, **kwargs):
+        """Executa o script de configuração do manger em questão."""
+        pass
+

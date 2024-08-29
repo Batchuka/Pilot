@@ -4,13 +4,13 @@ import os
 import tomllib
 import tomli_w
 from setuptools_scm import get_version
-from pilot.src.log import LogManager
+from pilot.src.log import Logger
 
 class PyprojectManager:
     def __init__(self, project_path):
         self.project_path = project_path
         self.pyproject_file = os.path.join(project_path, 'pyproject.toml')
-        self.log_manager = LogManager()
+        self.log_manager = Logger()
 
         if not os.path.exists(self.pyproject_file):
             self.log_manager.error(f"pyproject.toml não foi encontrado em: {project_path}")

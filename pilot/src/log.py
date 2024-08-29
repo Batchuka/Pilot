@@ -1,12 +1,16 @@
 # pilot/src/log.py
 import logging
+
+from pilot.singleton import Singleton
+
 from colorama import init, Fore, Style
 
 # Inicializa a colorama para colorir a saída no terminal
 init(autoreset=True)
 
-class LogManager:
-    def __init__(self):
+class Logger(Singleton):
+    
+    def _initialize(self):
         self.logger = logging.getLogger('pilot')
         self.logger.setLevel(logging.DEBUG)  # Configura o nível mínimo de log
 

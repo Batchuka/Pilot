@@ -3,13 +3,13 @@ from abc import ABC, abstractmethod
 
 from pilot.src.context import Context
 from pilot.src.config import Config
-from pilot.src.log import LogManager
+from pilot.src.log import Logger
 
 class BaseDeployPipeline:
     def __init__(self):
         self.config = Config().config
         self.ctx = Context()  # Instancia o contexto para uso nos managers
-        self.log = LogManager()
+        self.log = Logger()
         self.section_name = None  # Para ser definido nas subclasses
         self.default_section = None  # Para ser definido nas subclasses
 

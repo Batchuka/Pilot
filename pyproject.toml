@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=70", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,6 +8,14 @@ version = "2.0.0"
 description = "CLI for RPA tasks"
 readme = "README.md"
 requires-python = ">=3.11"
+dependencies = [
+    "build",
+    "poetry",
+    "rich",
+    "click",
+    "twine",
+    "colorama"
+]
 
 [project.scripts]
 pilot = "pilot.__main__:cli"
@@ -18,6 +26,7 @@ poetry = "*"
 rich = "*"
 click = "*"
 twine = "*"
+colorama = "*"
 
 [tool.setuptools.packages.find]
 where = ["."]

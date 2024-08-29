@@ -5,12 +5,12 @@ import configparser
 import sys
 
 from pilot.singleton import Singleton
-from pilot.src.log import LogManager
+from pilot.src.log import Logger
 
 class Config(Singleton):
 
     def _initialize(self):
-        self.log = LogManager()
+        self.log = Logger()
         self.project_root = os.path.abspath(os.getcwd())
         self.config_file = os.path.join(self.project_root, 'pilot.conf')
         self.config = configparser.ConfigParser()

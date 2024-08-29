@@ -1,13 +1,13 @@
 # pilot\src\docker.py
 from pilot.base.manager import BaseManager
-from pilot.src.log import LogManager
+from pilot.src.log import Logger
 
 class DockerManager(BaseManager):
 
     def __init__(self):
         super().__init__()
         self.section_name = 'docker'
-        self.log_mng = LogManager()
+        self.log_mng = Logger()
 
     def init(self, **kwargs):
         """Inicializa a sessão 'docker' no arquivo de configuração."""
