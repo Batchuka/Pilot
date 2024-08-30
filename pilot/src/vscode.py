@@ -99,8 +99,8 @@ class VscodeManager(BaseManager):
             if path not in auto_complete_paths:
                 auto_complete_paths.append(path)
 
-        # Define o modo de verificação de tipo para 'strict'
-        settings["python.analysis.typeCheckingMode"] = "strict"
+        # Define o modo de verificação de tipo para 'basic'
+        settings["python.analysis.typeCheckingMode"] = "basic"
         settings["python.autoComplete.extraPaths"] = auto_complete_paths
         settings["python.analysis.extraPaths"] = extra_paths
         settings["python.analysis.autoImportCompletions"] = True

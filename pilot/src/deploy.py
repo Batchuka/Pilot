@@ -43,6 +43,10 @@ class DeployManager(BaseManager):
         else:
             self.log.error("Pipeline não selecionado.")
 
+    def update(self, **kwargs):
+        raise NotImplementedError
+
+
 class RemoteDockerDeployPipeline(BaseDeployPipeline):
     def __init__(self):
         super().__init__()

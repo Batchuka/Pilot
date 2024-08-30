@@ -9,6 +9,7 @@ class BaseManager(ABC):
     """
 
     def __init__(self):
+        self.project_root = Config().project_root
         self.config = Config().config  # Obtém a configuração a partir da instância Singleton Config
         self.save_config = Config().save_config
         self.ctx = Context()  # Instancia o contexto para uso nos managers

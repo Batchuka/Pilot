@@ -92,3 +92,6 @@ class DockerManager(BaseManager):
                 self.log.error(f"Falha ao taguear a imagem '{image_name}:{source_tag}' como '{target_tag}': {result.stderr}")
         except Exception as e:
             self.log.error(f"Erro inesperado ao taguear a imagem '{image_name}:{source_tag}' como '{target_tag}': {str(e)}")
+
+    def update(self, **kwargs):
+        raise NotImplementedError

@@ -63,10 +63,14 @@ class Config(Singleton):
         """Obtém a instância da classe chamadora da stack de chamadas."""
         frame = inspect.currentframe()
         try:
-            caller_frame = frame.f_back.f_back  # Suba dois níveis na stack
-            caller_instance = caller_frame.f_locals.get('self', None)
-            if caller_instance:
-                return caller_instance
+            if frame is not None and frame.f_back is not None and frame.f_back.f_back is not None:
+                caller_frame = frame.f_back.f_back  # Suba dois níveis na stack
+                caller_instance = caller_frame.f_locals.get('self', None)
+                if caller_instance:
+                    return caller_instance
+            else:
+                self.log.error("Não foi possível determinar a classe invocante. O frame de chamada é None.")
+                return None
         except Exception as e:
             self.log.error(f"Erro ao determinar a classe invocante: {str(e)}")
             return None

@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from pilot.base.manager import BaseManager
+from pilot.src.pyproject import PyprojectManager
 
 class BuildManager(BaseManager):
 

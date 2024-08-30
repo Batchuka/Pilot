@@ -31,7 +31,7 @@ class AWSManager(BaseManager):
         """
         try:
             result = self.ctx.run("aws configure list")
-            if 'None' in result.stdout:
+            if result and 'None' in result.stdout:
                 self.log.warning("AWS CLI não configurado. Configurando agora...")
                 self.ctx.run("aws configure")
             else:
@@ -50,12 +50,13 @@ class AWSManager(BaseManager):
             f"--role-session-name {role_session_name}"
         )
         result = self.ctx.run(command)
-        credentials = result.stdout.strip()
+        if result: credentials = result.stdout.strip()
         
-        if result.return_code == 0:
+        if result and result.return_code == 0:
+            credentials = result.stdout.strip()
             self.log.info("Role assumida com sucesso. Credenciais armazenadas.")
         else:
-            self.log.warning(f"Falha ao assumir role: {credentials}")
+            self.log.warning(f"Falha ao assumir role: {result.stdout.strip() if result else 'No output'}")
             return None
 
     def authenticate_twine(self):
@@ -186,3 +187,7 @@ trusted-host =
 
         except Exception as e:
             self.log.error(f"Erro ao obter informações do pacote {package_name}: {e}")
+
+    def update(self, **kwargs):
+        raise NotImplementedError
+

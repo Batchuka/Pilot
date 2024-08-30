@@ -1,0 +1,24 @@
+{
+    "python.analysis.typeCheckingMode": "basic",
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}",
+        "/home/seluser/Pytrobot",
+        "/home/seluser/wmt-python-rpa-libraries/chrome",
+        "/home/seluser/wmt-python-rpa-libraries/despacho_agil",
+        "/home/seluser/Pilot",
+        "/home/seluser/wmt_registro_di_bot",
+        "/home/seluser/wmt-python-rpa-libraries/keycloak",
+        "/home/seluser/wmt-python-rpa-libraries/setecutil"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}",
+        "/home/seluser/Pytrobot",
+        "/home/seluser/wmt-python-rpa-libraries/chrome",
+        "/home/seluser/wmt-python-rpa-libraries/despacho_agil",
+        "/home/seluser/Pilot",
+        "/home/seluser/wmt_registro_di_bot",
+        "/home/seluser/wmt-python-rpa-libraries/keycloak",
+        "/home/seluser/wmt-python-rpa-libraries/setecutil"
+    ],
+    "python.analysis.autoImportCompletions": true
+}
