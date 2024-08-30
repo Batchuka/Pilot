@@ -1,4 +1,5 @@
 import os
+import site
 import json
 from pathlib import Path
 from pilot.base.manager import BaseManager
@@ -25,6 +26,8 @@ class VscodeManager(BaseManager):
             self.vscode_dir.mkdir()
             self.log.info(f".vscode directory created at: {self.vscode_dir}")
 
+        self.install_extensions_and_update_vscode()
+
         self.update()
 
     def ensure_vscode_directory(self):
@@ -45,26 +48,37 @@ class VscodeManager(BaseManager):
             "configurations": []
         }
 
-        # Adiciona a configuração principal para __main__.py
+        def upsert_configuration(configs, new_config):
+            """Insere ou atualiza uma configuração baseada no nome."""
+            for i, config in enumerate(configs):
+                if config['name'] == new_config['name']:
+                    configs[i] = new_config
+                    return
+            configs.append(new_config)
+
+        # Adiciona ou atualiza a configuração principal para __main__.py
         main_py_path = self.find_main_py()
         if main_py_path:
             main_config = {
                 "name": "Play Full Execution",
-                "type": "python",
+                "type": "debugpy",
                 "request": "launch",
                 "program": str(main_py_path),
                 "console": "integratedTerminal",
                 "justMyCode": False
             }
-            launch_config['configurations'].insert(0, main_config)
+            upsert_configuration(launch_config['configurations'], main_config)
 
-        # Adiciona configurações para cada arquivo de teste
+        # Adiciona ou atualiza configurações para cada arquivo de teste
         test_configs = self.create_test_configs()
-        launch_config['configurations'].extend(test_configs)
+        for test_config in test_configs:
+            upsert_configuration(launch_config['configurations'], test_config)
 
+        # Salva o arquivo JSON atualizado
         self.save_json_file(self.launch_file, launch_config)
 
     def update_settings_json(self):
+
         """Cria ou atualiza o arquivo settings.json com as configurações necessárias."""
         settings = self.load_json_file(self.settings_file) or {}
 
@@ -105,7 +119,7 @@ class VscodeManager(BaseManager):
                 if file.startswith("test_") and file.endswith(".py"):
                     config = {
                         "name": f"Test | {file}",
-                        "type": "python",
+                        "type": "debugpy",
                         "request": "launch",
                         "program": str(Path(root) / file),
                         "console": "integratedTerminal",
@@ -115,10 +129,25 @@ class VscodeManager(BaseManager):
         return test_configs
 
     def find_editable_packages_paths(self):
-        """Finds paths of packages installed in editable mode."""
+        """Find paths of packages installed in editable mode."""
         editable_paths = []
-        # Implement logic to find editable packages paths
+        site_packages = Path(self.get_site_packages_directory())
+
+        for dist_info_dir in site_packages.glob('*.dist-info'):
+            direct_url_path = dist_info_dir / 'direct_url.json'
+            if direct_url_path.exists():
+                with open(direct_url_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    package_url = data.get('url')
+                    if package_url and package_url.startswith('file://'):
+                        package_path = package_url[len('file://'):]
+                        editable_paths.append(package_path)
+        
         return editable_paths
+
+    def get_site_packages_directory(self):
+        """Get the site-packages directory of the current virtual environment."""
+        return next(iter(site.getsitepackages()), None)
 
     def install_extensions_and_update_vscode(self, extensions=None, update_vscode=False):
         """Instala extensões Python no VS Code e atualiza o VS Code, se necessário.
@@ -161,10 +190,20 @@ class VscodeManager(BaseManager):
                 self.log.error(f"Erro inesperado ao atualizar o VS Code: {str(e)}")
 
     def load_json_file(self, file_path):
-        """Loads a JSON file if it exists."""
+        """Carrega um arquivo JSON, removendo comentários se necessário."""
         if file_path.exists():
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # Remove linhas de comentários que começam com `//`
+                content = "\n".join(line for line in content.splitlines() if not line.strip().startswith("//"))
+                
+                # Carrega o JSON do conteúdo sem os comentários
+                return json.loads(content)
+            except json.JSONDecodeError as e:
+                self.log.error(f"Erro ao carregar JSON: {str(e)}")
+                return None
         return None
 
     def save_json_file(self, file_path, content):

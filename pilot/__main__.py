@@ -87,6 +87,5 @@ def commit(ctx, amend):
 
 
 if __name__ == "__main__":
-    # publish()
-    # deploy()
-    pass
+    vscode_manager = VscodeManager()
+    vscode_manager.init()
