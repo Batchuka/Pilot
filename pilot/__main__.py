@@ -87,5 +87,5 @@ def commit(ctx, amend):
 
 
 if __name__ == "__main__":
-    vscode_manager = VscodeManager()
-    vscode_manager.init()
+    git_manager = GitManager()
+    git_manager.execute_commit()

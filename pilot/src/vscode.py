@@ -78,7 +78,6 @@ class VscodeManager(BaseManager):
         self.save_json_file(self.launch_file, launch_config)
 
     def update_settings_json(self):
-
         """Cria ou atualiza o arquivo settings.json com as configurações necessárias."""
         settings = self.load_json_file(self.settings_file) or {}
 
@@ -86,14 +85,19 @@ class VscodeManager(BaseManager):
         extra_paths = settings.get("python.analysis.extraPaths", [])
         auto_complete_paths = settings.get("python.autoComplete.extraPaths", [])
 
-        # Adiciona o caminho do workspace folder
-        extra_paths.append("${workspaceFolder}")
-        auto_complete_paths.append("${workspaceFolder}")
+        # Adiciona o caminho do workspace folder se ainda não estiver presente
+        if "${workspaceFolder}" not in extra_paths:
+            extra_paths.append("${workspaceFolder}")
+        if "${workspaceFolder}" not in auto_complete_paths:
+            auto_complete_paths.append("${workspaceFolder}")
 
-        # Adiciona outros caminhos, por exemplo, os pacotes instalados como -e
+        # Adiciona outros caminhos, por exemplo, os pacotes instalados como -e, se ainda não estiverem presentes
         editable_paths = self.find_editable_packages_paths()
-        extra_paths.extend(editable_paths)
-        auto_complete_paths.extend(editable_paths)
+        for path in editable_paths:
+            if path not in extra_paths:
+                extra_paths.append(path)
+            if path not in auto_complete_paths:
+                auto_complete_paths.append(path)
 
         # Define o modo de verificação de tipo para 'strict'
         settings["python.analysis.typeCheckingMode"] = "strict"

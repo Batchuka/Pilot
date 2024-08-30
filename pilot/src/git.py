@@ -176,3 +176,7 @@ class GitManager(BaseManager):
 
             else:
                 self.log.error("Falha ao adicionar tag semântica")
+
+    def update(self, **kwargs):
+        raise NotImplementedError
+
