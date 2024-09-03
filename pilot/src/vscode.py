@@ -166,7 +166,9 @@ class VscodeManager(BaseManager):
                 "ms-python.vscode-pylance",
                 "ms-python.debugpy",
                 "donjayamanne.python-environment-manager",
-                "njpwerner.autodocstring"
+                "njpwerner.autodocstring",
+                "gruntfuggly.todo-tree",
+                "yzhang.markdown-all-in-one"
             ]
         
         # Instala extensões fornecidas ou padrão
