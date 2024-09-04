@@ -1,2 +1,6 @@
 # Pilot
-Python utility to help you to manage your project
+
+Utilitário Python para ajudar a gerenciar o seu projeto.
+
+
+

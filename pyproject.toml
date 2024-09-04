@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pilot"
-version = "2.0.0"
+dynamic = ["version"]
 description = "CLI for RPA tasks"
 readme = "README.md"
 requires-python = ">=3.11"
