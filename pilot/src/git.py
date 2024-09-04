@@ -93,7 +93,7 @@ class GitManager(BaseManager):
             # Primeiro, tenta obter a última tag usando o comando git tag
             result = self.ctx.run("git tag --sort=-creatordate")
             tags = result.stdout.strip().splitlines()
-            last_tag = tags[-1] if tags else "v0.0.0"
+            last_tag = tags[0] if tags else "v0.0.0"
 
             major, minor, patch = map(int, last_tag.lstrip('v').split('.'))
 
