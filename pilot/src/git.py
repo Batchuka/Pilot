@@ -44,7 +44,12 @@ class GitManager(BaseManager):
 
     def instala_hooks(self):
         """Copia os scripts de hook para o diretório de hooks do Git."""
-        self.hooks_path = self.repo_path / ".git" / "hooks"
+        if self.repo_path:
+            self.hooks_path = self.repo_path / ".git" / "hooks"
+        else:
+            self.log.error("O repo_path não está definido.")
+            return  # Ou outra ação apropriada, como lançar uma exceção
+
         for script in self.scripts_path.glob("*"):
             hook_name = script.name
             dest_path = self.hooks_path / hook_name
