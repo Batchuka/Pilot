@@ -59,6 +59,8 @@ class AWSManager(BaseManager):
             self.log.warning(f"Falha ao assumir role: {result.stdout.strip() if result else 'No output'}")
             return None
 
+    # Relação com CodeArtifact
+
     def authenticate_twine(self):
         """
         Configura o pip e o twine para usar o CodeArtifact com as credenciais da AWS.
@@ -187,6 +189,45 @@ trusted-host =
 
         except Exception as e:
             self.log.error(f"Erro ao obter informações do pacote {package_name}: {e}")
+
+    # Relação com ECR
+
+    def get_ecr_authentication_token(self):
+        """Obtém o token de autenticação para o ECR e executa o comando de login do Docker."""
+        self.log.info("Obtendo token de autenticação no ECR...")
+        try:
+            region = self.config['aws']['aws_default_region']
+            account_id = self.config['aws']['aws_account_id']
+            ecr_url = f"{account_id}.dkr.ecr.{region}.amazonaws.com"
+
+            # Comando para autenticar no ECR via Docker
+            command = (
+                f"aws ecr get-login-password --region {region} | "
+                f"docker login --username AWS --password-stdin {ecr_url}"
+            )
+            self.ctx.run(command)
+            self.log.info("Autenticação no ECR realizada com sucesso.")
+        except Exception as e:
+            self.log.error(f"Erro ao obter token de autenticação no ECR: {e}")
+
+    def get_ecr_repository_url(self):
+        """Monta a URL do repositório ECR, autenticando no ECR se necessário."""
+        self.log.info("Montando URL do repositório ECR...")
+        try:
+            # Invoca a autenticação no ECR antes de retornar a URL
+            self.get_ecr_authentication_token()
+
+            region = self.config['aws']['aws_default_region']
+            account_id = self.config['aws']['aws_account_id']
+            repository_name = self.config['deploy']['ecr_repo_name']
+
+            # Monta a URL do repositório ECR
+            ecr_url = f"{account_id}.dkr.ecr.{region}.amazonaws.com/{repository_name}"
+            self.log.info(f"URL do ECR montada: {ecr_url}")
+            return ecr_url
+        except Exception as e:
+            self.log.error(f"Erro ao montar a URL do ECR: {e}")
+            return None
 
     def update(self, **kwargs):
         raise NotImplementedError

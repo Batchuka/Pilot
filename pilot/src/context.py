@@ -14,6 +14,11 @@ class CustomResult:
         self.stderr = stderr
         self.return_code = return_code
 
+    @property
+    def ok(self):
+        """Retorna True se o return_code for 0, indicando sucesso."""
+        return self.return_code == 0
+
 
 class Context(Singleton):
 

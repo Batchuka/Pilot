@@ -34,3 +34,7 @@ class BaseManager(ABC):
         """Executa o script de configuração do manger em questão."""
         pass
 
+    # @abstractmethod
+    # def new(self, **kwargs):
+    #     """Executa o script de configuração do manger em questão."""
+    #     pass
