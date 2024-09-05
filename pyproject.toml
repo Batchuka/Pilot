@@ -22,3 +22,7 @@ pilot = "pilot.__main__:cli"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "dirty-tag"
