@@ -8,6 +8,7 @@ from pilot.default.context import CONTEXT_DEFAULTS
 from invoke.context import Context as InvokeContext
 from invoke.exceptions import UnexpectedExit
 
+
 class CustomResult:
     def __init__(self, stdout="", stderr="", return_code=-1):
         self.stdout = stdout
