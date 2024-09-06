@@ -5,7 +5,7 @@
             "name": "Play Full Execution",
             "type": "debugpy",
             "request": "launch",
-            "program": "/home/seluser/Pilot/pilot/__main__.py",
+            "program": "C:\\Users\\davi.salles\\Documents\\WM_projetos\\Pilot\\pilot\\__main__.py",
             "console": "integratedTerminal",
             "justMyCode": false
         }
