@@ -84,8 +84,3 @@ def commit(ctx, amend):
     """Executa o processo completo de commit, com ou sem append na mensagem."""
     git_manager = GitManager()
     git_manager.execute_commit(amend)
-
-
-if __name__ == "__main__":
-    git_manager = GitManager()
-    git_manager.execute_commit()

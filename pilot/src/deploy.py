@@ -138,8 +138,8 @@ class EcrDeployPipeline(BaseDeployPipeline):
 
             # 7. Taggear a imagem com as versões e latest
             self.log.info(f"Tagueando a imagem {image_name} com {latest_version} e 'latest'...")
-            self.docker_manager.tag_image(image_name, "latest", f"{ecr_url}/{image_name}:latest")
-            self.docker_manager.tag_image(image_name, latest_version, f"{ecr_url}/{image_name}:{latest_version}")
+            self.docker_manager.tag_image(image_name, "latest", f"{ecr_url}/{image_name}", "latest")
+            self.docker_manager.tag_image(image_name, latest_version, f"{ecr_url}/{image_name}",latest_version)
 
             # 8. Push da imagem para o ECR
             self.log.info(f"Fazendo push da imagem {image_name} para o ECR...")
