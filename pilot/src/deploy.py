@@ -83,7 +83,7 @@ class RemoteDockerDeployPipeline(BaseDeployPipeline):
             self.docker_manager.build_docker_image(dockerfile_path, image_name, latest_version, codeartifact_url)
 
             # 7. Taguear a imagem com a versão do pacote
-            self.docker_manager.tag_image(image_name, latest_version, "latest")
+            self.docker_manager.tag_image(image_name, latest_version, image_name, "latest")
 
             self.log.info("Deploy completado com sucesso!")
 
