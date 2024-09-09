@@ -14,7 +14,8 @@ dependencies = [
     "rich",
     "click",
     "twine",
-    "colorama"
+    "colorama",
+    "invoke
 ]
 
 [project.scripts]
