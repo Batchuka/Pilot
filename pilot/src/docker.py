@@ -77,24 +77,24 @@ class DockerManager(BaseManager):
         except Exception as e:
             self.log.error(f"Erro durante o processo de build da imagem Docker: {e}")
 
-    def tag_image(self, image_name, source_tag, target_tags):
+    def tag_image(self, source_image, source_tag, target_image, target_tag):
         """Tagueia a imagem Docker com múltiplas tags."""
-        if isinstance(target_tags, str):
-            target_tags = [target_tags]
+        if isinstance(target_tag, str):
+            target_tags = [target_tag]
 
-        self.log.info(f"Tagueando a imagem '{image_name}:{source_tag}' com as tags: {', '.join(target_tags)}")
+        self.log.info(f"Tagueando a imagem '{source_image}:{source_tag}' com as tags: {', '.join(target_tags)}")
         try:
             for target_tag in target_tags:
-                command = f"docker tag {image_name}:{source_tag} {image_name}:{target_tag}"
+                command = f"docker tag {source_image}:{source_tag} {target_image}:{target_tag}"
                 result = self.ctx.run(command)
 
                 if result.return_code == 0:
-                    self.log.info(f"Imagem '{image_name}:{source_tag}' foi tagueada com sucesso como '{image_name}:{target_tag}'.")
+                    self.log.info(f"Imagem '{source_image}:{source_tag}' foi tagueada com sucesso como '{target_image}:{target_tag}'.")
                 else:
-                    self.log.error(f"Falha ao taguear a imagem '{image_name}:{source_tag}' como '{target_tag}': {result.stderr}")
+                    self.log.error(f"Falha ao taguear a imagem '{source_image}:{source_tag}' como '{target_tag}': {result.stderr}")
 
         except Exception as e:
-            self.log.error(f"Erro inesperado ao taguear a imagem '{image_name}:{source_tag}' com múltiplas tags: {str(e)}")
+            self.log.error(f"Erro inesperado ao taguear a imagem '{source_image}:{source_tag}' com múltiplas tags: {str(e)}")
 
     def update(self, **kwargs):
         raise NotImplementedError
